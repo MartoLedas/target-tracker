@@ -1,0 +1,15 @@
+#include "gamewin.h"
+#include <windows.h>
+
+IDC_GAME_LOGO BITMAP "bowl.bmp"
+
+IDD_MENU DIALOGEX 0, 0, 300, 200
+STYLE DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Aim Trainer Game"
+FONT 12, "Courier New"
+BEGIN
+    CONTROL "", IDC_GAME_LOGO, "STATIC", SS_BITMAP | WS_CHILD | WS_VISIBLE, 50, 20, 200, 80
+    LTEXT "Target Tracking Game", IDC_STATIC, 100, 10, 90, 10, SS_CENTER
+    LTEXT "Instructions: Hover over the circle to make it move. Score points by staying inside the circle.", IDC_GAME_INSTRUCTIONS, 50, 30, 200, 20, SS_CENTER
+    PUSHBUTTON "Play", IDC_PLAY_BUTTON, 110, 60, 80, 30
+END
