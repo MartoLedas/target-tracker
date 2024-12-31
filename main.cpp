@@ -240,8 +240,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     char buffer[100];
                     sprintf(buffer, "Time's up! Your score: %d\nHighscore: %d", score, highScore);
-                    //MessageBox(hwnd, buffer, "Game Over", MB_OK);
-                    //PostQuitMessage(0);
+
                     int result = MessageBox(hwnd, buffer, "Game Over", MB_OKCANCEL | MB_ICONINFORMATION);
 
                     if (result == IDOK) {
