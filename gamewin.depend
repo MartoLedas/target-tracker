@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1735509534 source:d:\download\vu-ps\v\windows api\gamewin\main.cpp
+1735613026 source:d:\download\vu-ps\v\windows api\gamewin\main.cpp
 	<windows.h>
 	<stdlib.h>
 	<time.h>
@@ -9,13 +9,13 @@
 	<string>
 	"gamewin.h"
 
-1735509726 d:\download\vu-ps\v\windows api\gamewin\gamewin.h
+1735612912 d:\download\vu-ps\v\windows api\gamewin\gamewin.h
 
-1735510350 source:d:\download\vu-ps\v\windows api\gamewin\resource.rc
+1735613224 source:d:\download\vu-ps\v\windows api\gamewin\resource.rc
 	"gamewin.h"
 	<windows.h>
 
-1735519906 source:d:\download\vu-ps\v\windows api\gamewin\projectdll\gamescore.cpp
+1735519973 source:d:\download\vu-ps\v\windows api\gamewin\projectdll\gamescore.cpp
 	<windows.h>
 	<fstream>
 

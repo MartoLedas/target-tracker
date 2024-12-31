@@ -12,4 +12,5 @@ BEGIN
     LTEXT "Target Tracking Game", IDC_STATIC, 100, 10, 90, 10, SS_CENTER
     LTEXT "Instructions: Hover over the circle to make it move. Score points by staying inside the circle.", IDC_GAME_INSTRUCTIONS, 50, 30, 200, 20, SS_CENTER
     PUSHBUTTON "Play", IDC_PLAY_BUTTON, 110, 60, 80, 30
+    PUSHBUTTON "Exit", IDC_EXIT_BUTTON, 230, 170, 60, 20
 END
