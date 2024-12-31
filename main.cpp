@@ -7,11 +7,21 @@
 #include <string>
 #include "gamewin.h"
 
+typedef int (*CalculateScoreFunc)(bool, int);
+typedef int (*SaveHighScoreFunc)(const char*, int);
+typedef int (*GetHighScoreFunc)(const char*);
+
+CalculateScoreFunc CalculateScore;
+SaveHighScoreFunc SaveHighScore;
+GetHighScoreFunc GetHighScore;
+
+HMODULE hGameScoreDLL;
+
 INT_PTR CALLBACK MenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 #define TIMER_ID 1
 #define GAME_TIME 20 // Adjust time limit in seconds
-#define CIRCLE_RADIUS 22 // Adjust circle size
+#define CIRCLE_RADIUS 25 // Adjust circle size
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -24,6 +34,26 @@ int circleRadius = CIRCLE_RADIUS;
 int circleLifetime = 0;
 const int circleMaxLifetime = 12000;
 bool isCircleActivated = false;
+
+bool LoadGameScoreDLL(HMODULE &hDLL) {
+    hDLL = LoadLibrary(TEXT("gamewinDLL.dll"));
+    if (!hDLL) {
+        MessageBox(NULL, TEXT("Failed to load the dll"), TEXT("Error"), MB_ICONERROR);
+        return false;
+    }
+
+    CalculateScore = (CalculateScoreFunc)GetProcAddress(hDLL, "CalculateScore");
+    SaveHighScore = (SaveHighScoreFunc)GetProcAddress(hDLL, "SaveHighScore");
+    GetHighScore = (GetHighScoreFunc)GetProcAddress(hDLL, "GetHighScore");
+
+    if (!CalculateScore || !SaveHighScore || !GetHighScore) {
+        MessageBox(NULL, TEXT("Failed to find functions in the dll"), TEXT("Error"), MB_ICONERROR);
+        FreeLibrary(hDLL);
+        return false;
+    }
+
+    return true;
+}
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     srand((unsigned int)time(NULL)); // Seed RNG
@@ -84,38 +114,6 @@ bool IsCursorInCircle(int mouseX, int mouseY) {
     return (dx * dx + dy * dy) <= (circleRadius * circleRadius);
 }
 
-void SaveHighScore(int currentScore) {
-    const char* filename = "highscore.txt";
-    int highScore = 0;
-
-    std::ifstream inputFile(filename);
-    if (inputFile.is_open()) {
-        inputFile >> highScore;
-        inputFile.close();
-    }
-
-    if (currentScore > highScore) {
-        std::ofstream outputFile(filename);
-        if (outputFile.is_open()) {
-            outputFile << currentScore;
-            outputFile.close();
-        }
-    }
-}
-
-int GetHighScore() {
-    const char* filename = "highscore.txt";
-    int highScore = 0;
-
-    std::ifstream inputFile(filename);
-    if (inputFile.is_open()) {
-        inputFile >> highScore;
-        inputFile.close();
-    }
-
-    return highScore;
-}
-
 INT_PTR CALLBACK MenuProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_INITDIALOG:
@@ -153,11 +151,29 @@ INT_PTR CALLBACK MenuProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-        case WM_CREATE:
-            srand(time(NULL)); // Seed the random number generator for random positions
 
-            // Set the initial position of the circle randomly
+    switch (uMsg) {
+        case WM_CREATE: {
+            srand(time(NULL));
+
+            hGameScoreDLL = LoadLibrary(TEXT("gamewinDLL.dll"));
+            if (!hGameScoreDLL) {
+                MessageBox(hwnd, TEXT("Failed to load the dll"), TEXT("Error"), MB_ICONERROR);
+                PostQuitMessage(0);
+                return -1;
+            }
+
+            CalculateScore = (CalculateScoreFunc)GetProcAddress(hGameScoreDLL, "CalculateScore");
+            SaveHighScore = (SaveHighScoreFunc)GetProcAddress(hGameScoreDLL, "SaveHighScore");
+            GetHighScore = (GetHighScoreFunc)GetProcAddress(hGameScoreDLL, "GetHighScore");
+
+            if (!CalculateScore || !SaveHighScore || !GetHighScore) {
+                MessageBox(hwnd, TEXT("Failed to find functions in the dll"), TEXT("Error"), MB_ICONERROR);
+                FreeLibrary(hGameScoreDLL);
+                PostQuitMessage(0);
+                return -1;
+            }
+
             RECT rect;
             GetClientRect(hwnd, &rect);
             circleX = rand() % (rect.right - 2 * circleRadius) + circleRadius;
@@ -166,10 +182,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             circleVelocityX = 5; // Speed in x direction
             circleVelocityY = 5; // Speed in y direction
 
-            SetTimer(hwnd, TIMER_ID, 50, NULL); // Refresh frame every 50 ms
+            SetTimer(hwnd, TIMER_ID, 50, NULL);
             SetTimer(hwnd, 2, 1000, NULL);
             return 0;
-
+        }
 
         case WM_TIMER:
             if (wParam == TIMER_ID) {
@@ -187,9 +203,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     MoveCircle(hwnd);
                 }
 
-                if (isCursorInside) {
-                    score++;
-                }
+                score = CalculateScore(isCursorInside, score);
 
                 circleLifetime += 50;
                 if (circleLifetime >= circleMaxLifetime) {
@@ -210,20 +224,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     KillTimer(hwnd, TIMER_ID);
                     KillTimer(hwnd, 2);
 
-                    SaveHighScore(score);
+                    SaveHighScore("highscore.txt", score);
 
                     char buffer[100];
                     sprintf(buffer, "Time's up! Your score: %d", score);
                     MessageBox(hwnd, buffer, "Game Over", MB_OK);
-                    PostQuitMessage(0); // Quit the game
+                    PostQuitMessage(0);
                 }
 
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             return 0;
-
-
-
 
         case WM_PAINT: {
             PAINTSTRUCT ps;
@@ -231,6 +242,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             RECT rect;
             GetClientRect(hwnd, &rect);
+
             HBRUSH bgBrush = CreateSolidBrush(RGB(255, 255, 255));
             FillRect(hdc, &rect, bgBrush);
             DeleteObject(bgBrush);
@@ -241,17 +253,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     circleX + circleRadius, circleY + circleRadius);
             DeleteObject(circleBrush);
 
-            int highScore = GetHighScore();
+            int highScore = GetHighScore("highscore.txt");
+
             char buffer[100];
-            sprintf(buffer, "Score: %d | Time Left: %d | High Score: %d", score, remainingTime, highScore);
+            sprintf(buffer, "High Score: %d | Score: %d | Time Left: %d", highScore, score, remainingTime);
             TextOut(hdc, 10, 10, buffer, strlen(buffer));
 
             EndPaint(hwnd, &ps);
         }
         return 0;
 
-
         case WM_DESTROY:
+            if (hGameScoreDLL) {
+                FreeLibrary(hGameScoreDLL);
+            }
+
             PostQuitMessage(0);
             return 0;
     }
