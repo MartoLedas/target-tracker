@@ -2,6 +2,7 @@
 #include <windows.h>
 
 IDC_GAME_LOGO BITMAP "bowl.bmp"
+IDI_GAMEICON ICON "gameicon.ico"
 
 IDD_MENU DIALOGEX 0, 0, 300, 200
 STYLE DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU

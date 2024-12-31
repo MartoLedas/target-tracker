@@ -2,6 +2,7 @@
 #define IDC_GAME_LOGO     102
 #define IDC_PLAY_BUTTON   103
 #define IDC_GAME_INSTRUCTIONS 104
+#define IDI_GAMEICON 105
 #define IDC_STATIC -1
 #define IDC_EXIT_BUTTON 2002
 

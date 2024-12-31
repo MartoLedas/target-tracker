@@ -52,6 +52,7 @@ bool LoadGameScoreDLL(HMODULE &hDLL) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+
     srand((unsigned int)time(NULL)); // Seed RNG
 
     DialogBox(hInstance, MAKEINTRESOURCE(IDD_MENU), NULL, MenuProc);
@@ -62,6 +63,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_GAMEICON));
 
     RegisterClass(&wc);
 
@@ -120,6 +122,14 @@ INT_PTR CALLBACK MenuProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     SendMessage(hwndStatic, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hBitmap);
                 } else {
                     MessageBox(hDlg, "Failed to load logo bitmap.", "Error", MB_OK | MB_ICONERROR);
+                }
+
+                HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_GAMEICON));
+                if (hIcon) {
+                    SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+                    SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+                } else {
+                    MessageBox(hDlg, "Failed to load custom icon.", "Error", MB_OK | MB_ICONERROR);
                 }
             }
             return (INT_PTR)TRUE;
@@ -230,8 +240,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     char buffer[100];
                     sprintf(buffer, "Time's up! Your score: %d\nHighscore: %d", score, highScore);
-                    MessageBox(hwnd, buffer, "Game Over", MB_OK);
-                    PostQuitMessage(0);
+
+                    int result = MessageBox(hwnd, buffer, "Game Over", MB_OKCANCEL | MB_ICONINFORMATION);
+
+                    if (result == IDOK) {
+                        TCHAR szFilePath[MAX_PATH];
+                        GetModuleFileName(NULL, szFilePath, MAX_PATH);
+                        ShellExecute(NULL, TEXT("open"), szFilePath, NULL, NULL, SW_SHOWNORMAL);
+
+                        PostQuitMessage(0);
+                    } else if (result == IDCANCEL) {
+                        PostQuitMessage(0);
+                    }
                 }
 
                 InvalidateRect(hwnd, NULL, TRUE);
