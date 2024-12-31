@@ -239,19 +239,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     int highScore = GetHighScore("highscore.txt");
 
                     char buffer[100];
-                    sprintf(buffer, "Time's up! Your score: %d\nHighscore: %d", score, highScore);
+                    sprintf(buffer, "Your score: %d\nHighscore: %d", score, highScore);
+                    MessageBox(hwnd, buffer, "Time's up!", MB_OK);
+                    TCHAR szFilePath[MAX_PATH];
+                    GetModuleFileName(NULL, szFilePath, MAX_PATH);
+                    ShellExecute(NULL, TEXT("open"), szFilePath, NULL, NULL, SW_SHOWNORMAL);
 
-                    int result = MessageBox(hwnd, buffer, "Game Over", MB_OKCANCEL | MB_ICONINFORMATION);
-
-                    if (result == IDOK) {
-                        TCHAR szFilePath[MAX_PATH];
-                        GetModuleFileName(NULL, szFilePath, MAX_PATH);
-                        ShellExecute(NULL, TEXT("open"), szFilePath, NULL, NULL, SW_SHOWNORMAL);
-
-                        PostQuitMessage(0);
-                    } else if (result == IDCANCEL) {
-                        PostQuitMessage(0);
-                    }
+                    PostQuitMessage(0);
                 }
 
                 InvalidateRect(hwnd, NULL, TRUE);
