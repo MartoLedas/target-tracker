@@ -13,7 +13,11 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add directory="../gamewinDLL" />
 				</Compiler>
+				<Linker>
+					<Add library="../gamewinDLL/bin/Debug/libgamewinDLL.a" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
@@ -25,7 +29,6 @@
 			<Add library="kernel32" />
 			<Add library="comctl32" />
 		</Linker>
-		<Unit filename="ProjectDLL/GameScore.cpp" />
 		<Unit filename="gamewin.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="resource.rc">
