@@ -19,10 +19,6 @@ HMODULE hGameScoreDLL;
 
 INT_PTR CALLBACK MenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-#define TIMER_ID 1
-#define GAME_TIME 20 // Adjust time limit in seconds
-#define CIRCLE_RADIUS 25 // Adjust circle size
-
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int circleX, circleY;
@@ -140,6 +136,10 @@ INT_PTR CALLBACK MenuProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             if (LOWORD(wParam) == IDC_PLAY_BUTTON) {
                 EndDialog(hDlg, 0);
                 return (INT_PTR)TRUE;
+            } else if (LOWORD(wParam) == IDC_EXIT_BUTTON) {
+                EndDialog(hDlg, -1);
+                PostQuitMessage(0);
+                return (INT_PTR)TRUE;
             }
             break;
 
@@ -226,8 +226,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     SaveHighScore("highscore.txt", score);
 
+                    int highScore = GetHighScore("highscore.txt");
+
                     char buffer[100];
-                    sprintf(buffer, "Time's up! Your score: %d", score);
+                    sprintf(buffer, "Time's up! Your score: %d\nHighscore: %d", score, highScore);
                     MessageBox(hwnd, buffer, "Game Over", MB_OK);
                     PostQuitMessage(0);
                 }
